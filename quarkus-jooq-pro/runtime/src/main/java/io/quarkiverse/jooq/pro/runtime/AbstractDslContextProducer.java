@@ -1,19 +1,17 @@
-package io.quarkiverse.jooq.runtime;
+package io.quarkiverse.jooq.pro.runtime;
 
-import java.lang.annotation.*;
 import java.util.Objects;
-
-import javax.inject.Qualifier;
 
 import org.jboss.logging.Logger;
 import org.jooq.DSLContext;
 
 import io.agroal.api.AgroalDataSource;
+import io.quarkiverse.jooq.runtime.JooqCustomContext;
 
 /**
  * Produces DSLContext
  *
- * @author <a href="mailto:leo.tu.taipei@gmail.com">Leo Tu</a>
+ * @author Tim King
  */
 public abstract class AbstractDslContextProducer {
     private static final Logger log = Logger.getLogger(AbstractDslContextProducer.class);
@@ -45,16 +43,5 @@ public abstract class AbstractDslContextProducer {
         Objects.requireNonNull(dataSource, "dataSource");
         Objects.requireNonNull(customConfiguration, "customConfiguration");
         return DslContextFactory.create(sqlDialect, dataSource, customConfiguration);
-    }
-
-    /**
-     * CDI: Ambiguous dependencies
-     */
-    @Target({ ElementType.METHOD, ElementType.FIELD, ElementType.PARAMETER, ElementType.TYPE })
-    @Retention(RetentionPolicy.RUNTIME)
-    @Documented
-    @Qualifier
-    public @interface DslContextQualifier {
-        String value();
     }
 }

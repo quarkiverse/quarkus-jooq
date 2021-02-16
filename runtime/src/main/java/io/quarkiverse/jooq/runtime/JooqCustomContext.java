@@ -19,12 +19,12 @@ import io.quarkiverse.jooq.sql.SqlLoggerListener;
  * @author <a href="mailto:leo.tu.taipei@gmail.com">Leo Tu</a>
  */
 public interface JooqCustomContext {
-    static final Logger LOGGER = Logger.getLogger(JooqCustomContext.class);
+    Logger LOGGER = Logger.getLogger(JooqCustomContext.class);
 
     /**
      * File "jooq-settings.xml"
      */
-    default public void apply(Configuration configuration) {
+    default void apply(Configuration configuration) {
         Settings settings = configuration.settings();
         settings.setRenderCatalog(false);
         settings.setRenderSchema(false);
@@ -34,7 +34,7 @@ public interface JooqCustomContext {
 
         if (settings.isExecuteLogging() && configuration instanceof DefaultConfiguration) {
             DefaultConfiguration defaultConfig = (DefaultConfiguration) configuration;
-            if (configuration instanceof DefaultConfiguration && configuration.executeListenerProviders() != null) {
+            if (configuration.executeListenerProviders() != null) {
                 List<ExecuteListenerProvider> providers = new ArrayList<>(
                         Arrays.asList(configuration.executeListenerProviders()));
                 providers.add(SqlLoggerListener::new);
@@ -42,6 +42,7 @@ public interface JooqCustomContext {
             } else {
                 defaultConfig.setExecuteListenerProvider(SqlLoggerListener::new);
             }
+
             Stream.of(configuration.executeListenerProviders()).forEach(p -> {
                 LOGGER.debugv("executeListenerProvider: {0}", p);
             });
