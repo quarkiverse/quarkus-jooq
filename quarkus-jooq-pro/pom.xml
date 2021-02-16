@@ -10,7 +10,8 @@
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <artifactId>quarkus-jooq-pro-parent</artifactId>
+    <groupId>io.quarkiverse.jooq.pro</groupId>
+    <artifactId>quarkus-jooq-parent</artifactId>
     <name>Quarkus jOOQ Pro - Parent</name>
 
     <packaging>pom</packaging>
