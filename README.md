@@ -172,4 +172,45 @@ Native compilation is supported in the standard Quarkus way using:
 
 ## jOOQ Commercial Distributions
 
-Only the Open Source version of jOOQ is supported at this time because of the lack of access to the pro jars when this extension is built. See [this issue](https://github.com/quarkiverse/quarkus-jooq/issues/3) for progress.
+Only the Open Source version of jOOQ is supported as an automated build target at this time because of the lack of access to the pro jars at build time. 
+
+In order to build use the jOOQ commercial features the extension must be built by the license holder. This can be done by:
+
+* Adding the commercial jOOQ jars to a private maven repository
+* Configuring settings.xml with the access details, for example: 
+```xml
+<settings xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0 http://maven.apache.org/xsd/settings-1.0.0.xsd" xmlns="http://maven.apache.org/SETTINGS/1.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <profiles>
+        <profile>
+            <id>jooq-pro</id>
+            <repositories>
+                <repository>
+                    <id>[REPO_ID]</id>
+                    <name>[REPO_NAME]</name>
+                    <url>[REPO_URL]</url>
+                </repository>
+            </repositories>
+        </profile>
+    </profiles>
+    <servers>
+        <server>
+            <id>[REPO_ID]</id>
+            <username>[USERNAME]</username>
+            <password>[PASSWORD]</password>
+        </server>
+    </servers>
+</settings>
+```
+* Building the extension:
+```shell
+cd [EXTENSION_HOME]/quarkus-jooq-pro
+mvn clean install -Pjooq-pro 
+```
+* Optionally release the artifacts to the private maven repository for use elsewhere and import into your project:
+```xml
+<dependency>
+    <groupId>io.quarkiverse.jooq.pro</groupId>
+    <artifactId>quarkus-jooq</artifactId>
+    <version>${quarkus-jooq-pro.version}</version>
+</dependency>
+```
