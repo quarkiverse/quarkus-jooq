@@ -73,7 +73,7 @@
     <modules>
         <module>deployment</module>
         <module>runtime</module>
-        <module>quarkus-jooq-pro</module>
+<!--        <module>quarkus-jooq-pro</module>-->
     </modules>
 
     <dependencyManagement>
@@ -208,6 +208,10 @@
                     <value>true</value>
                 </property>
             </activation>
+            <modules>
+                <module>deployment</module>
+                <module>runtime</module>
+            </modules>
             <build>
                 <plugins>
                     <plugin>
@@ -243,6 +247,9 @@
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-gpg-plugin</artifactId>
                         <version>${maven-gpg-plugin.version}</version>
+                        <configuration>
+                            <skip>true</skip>
+                        </configuration>
                         <executions>
                             <execution>
                                 <id>sign-artifacts</id>
