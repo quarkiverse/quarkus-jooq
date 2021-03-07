@@ -71,7 +71,6 @@
     <modules>
         <module>deployment</module>
         <module>runtime</module>
-<!--        <module>quarkus-jooq-pro</module>-->
     </modules>
 
     <dependencyManagement>
@@ -198,6 +197,29 @@
     </build>
 
     <profiles>
+        <profile>
+            <id>jooq-pro</id>
+            <activation>
+                <property>
+                    <name>jooq-pro</name>
+                    <value>true</value>
+                </property>
+            </activation>
+            <modules>
+                <module>quarkus-jooq-pro</module>
+            </modules>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-enforcer-plugin</artifactId>
+                        <configuration>
+                            <skip>true</skip>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
         <profile>
             <id>release</id>
             <activation>
