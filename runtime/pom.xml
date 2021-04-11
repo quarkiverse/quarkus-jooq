@@ -10,6 +10,7 @@
 
     <artifactId>quarkus-jooq</artifactId>
     <name>Quarkus jOOQ - Runtime</name>
+    <description>Enables you to develop type safe SQL queries using jOOQ</description>
 
     <dependencies>
         <dependency>
