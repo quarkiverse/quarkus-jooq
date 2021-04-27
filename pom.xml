@@ -10,7 +10,7 @@
 
     <groupId>io.quarkiverse.jooq</groupId>
     <artifactId>quarkus-jooq-parent</artifactId>
-    <version>0.2.0-SNAPSHOT</version>
+    <version>0.2.0</version>
     <name>Quarkus jOOQ - Parent</name>
 
     <packaging>pom</packaging>
@@ -30,7 +30,7 @@
         <url>https://github.com/quarkiverse/quarkus-jooq</url>
         <connection>scm:git:https://github.com/quarkiverse/quarkus-jooq.git</connection>
         <developerConnection>scm:git:git@github.com/quarkiverse/quarkus-jooq.git</developerConnection>
-        <tag>HEAD</tag>
+        <tag>0.2.0</tag>
     </scm>
 
     <developers>
