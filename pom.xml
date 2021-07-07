@@ -10,7 +10,7 @@
 
     <groupId>io.quarkiverse.jooq</groupId>
     <artifactId>quarkus-jooq-parent</artifactId>
-    <version>0.3.0-SNAPSHOT</version>
+    <version>0.2.1-SNAPSHOT</version>
     <name>Quarkus jOOQ - Parent</name>
 
     <packaging>pom</packaging>
@@ -22,8 +22,8 @@
         <maven.compiler.target>1.8</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <quarkus.version>1.13.2.Final</quarkus.version>
-        <org.jooq.version>3.14.9</org.jooq.version>
+        <quarkus.version>1.13.7.Final</quarkus.version>
+        <org.jooq.version>3.15.0</org.jooq.version>
     </properties>
 
     <scm>

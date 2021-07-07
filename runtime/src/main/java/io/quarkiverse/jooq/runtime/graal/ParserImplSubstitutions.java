@@ -77,12 +77,6 @@ public final class ParserImplSubstitutions {
                 return null;
             }
 
-            @Deprecated
-            @Override
-            public String getSQL(boolean inline) {
-                return null;
-            }
-
             @Override
             public String getSQL(ParamType paramType) {
                 return null;
@@ -178,12 +172,6 @@ public final class ParserImplSubstitutions {
 
             @Override
             public String getSQL() {
-                return null;
-            }
-
-            @Deprecated
-            @Override
-            public String getSQL(boolean inline) {
                 return null;
             }
 
