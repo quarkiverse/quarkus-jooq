@@ -76,6 +76,40 @@ endif::add-copy-button-to-env-var[]
 |string
 |
 
+a|icon:lock[title=Fixed at build time] [[quarkus-jooq_quarkus-jooq-register-generated-classes-for-reflection]] [.property-path]##link:#quarkus-jooq_quarkus-jooq-register-generated-classes-for-reflection[`quarkus.jooq.register-generated-classes-for-reflection`]##
+
+[.description]
+--
+Whether to automatically register jOOQ records/POJOs for reflection.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_JOOQ_REGISTER_GENERATED_CLASSES_FOR_REFLECTION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_JOOQ_REGISTER_GENERATED_CLASSES_FOR_REFLECTION+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`true`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-jooq_quarkus-jooq-generated-classes-pattern]] [.property-path]##link:#quarkus-jooq_quarkus-jooq-generated-classes-pattern[`quarkus.jooq.generated-classes-pattern`]##
+
+[.description]
+--
+Regex used to determine classes to be registered for reflection.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_JOOQ_GENERATED_CLASSES_PATTERN+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_JOOQ_GENERATED_CLASSES_PATTERN+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`.+\.tables\.(pojos\|records)\..+`
+
 a|icon:lock[title=Fixed at build time] [[quarkus-jooq_quarkus-jooq-named-config-dialect]] [.property-path]##link:#quarkus-jooq_quarkus-jooq-named-config-dialect[`quarkus.jooq."named-config".dialect`]##
 
 [.description]

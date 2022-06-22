@@ -5,6 +5,7 @@ import java.util.Map;
 import io.quarkus.runtime.annotations.ConfigPhase;
 import io.quarkus.runtime.annotations.ConfigRoot;
 import io.smallrye.config.ConfigMapping;
+import io.smallrye.config.WithDefault;
 import io.smallrye.config.WithParentName;
 
 /**
@@ -21,6 +22,20 @@ public interface JooqConfig {
      */
     @WithParentName
     JooqItemConfig defaultConfig();
+
+    /**
+     * Whether to automatically register jOOQ records/POJOs
+     * for reflection.
+     */
+    @WithDefault("true")
+    boolean registerGeneratedClassesForReflection();
+
+    /**
+     * Regex used to determine classes to be registered for
+     * reflection.
+     */
+    @WithDefault(".+\\.tables\\.(pojos|records)\\..+")
+    String generatedClassesPattern();
 
     /**
      * Additional configs.
