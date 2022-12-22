@@ -20,22 +20,20 @@ import javax.transaction.Transactional.TxType;
 
 import org.h2.tools.Server;
 import org.jboss.logging.Logger;
-import org.jboss.shrinkwrap.api.ShrinkWrap;
-import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.jooq.DSLContext;
 import org.jooq.impl.DSL;
 import org.junit.jupiter.api.*;
-import org.junit.jupiter.api.extension.RegisterExtension;
 
 import io.quarkus.runtime.ShutdownEvent;
 import io.quarkus.runtime.StartupEvent;
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.junit.QuarkusTest;
 
 /**
  *
  * @author <a href="mailto:leo.tu.taipei@gmail.com">Leo Tu</a>
  */
 //@Disabled
+@QuarkusTest
 public class JooqTest {
     private static final Logger LOGGER = Logger.getLogger(JooqTest.class);
 
@@ -49,7 +47,8 @@ public class JooqTest {
     static public void startDatabase() {
         LOGGER.debug("Start H2 server..." + server);
         try {
-            server = Server.createTcpServer(new String[] { "-trace", "-tcp", "-tcpAllowOthers", "-tcpPort", "19092" })
+            server = Server
+                    .createTcpServer(new String[] { "-ifNotExists", "-trace", "-tcp", "-tcpAllowOthers", "-tcpPort", "19092" })
                     .start();
             Thread.sleep(1000 * 1); // waiting for database to be ready
         } catch (Exception e) {
@@ -74,20 +73,6 @@ public class JooqTest {
         // }
     }
 
-    @Order(10)
-    @RegisterExtension
-    static final QuarkusUnitTest config = new QuarkusUnitTest() //
-            .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class) //
-                    .addAsResource("application.properties", "application.properties") //
-                    .addClasses(
-                            TestBean.class,
-                            MyCustomConfigurationFactory.class,
-                            MyCustomConfiguration1.class,
-                            QDemo.class,
-                            RDemo.class,
-                            Public.class,
-                            Demo.class));
-
     @Inject
     TestBean testBean;
 
@@ -102,7 +87,7 @@ public class JooqTest {
     // }
 
     @Test
-    public void test1() {
+    public void test1() throws Exception {
         LOGGER.info("BEGIN test1...");
         try {
             testBean.testConnection();
@@ -120,6 +105,7 @@ public class JooqTest {
             testBean.testAllService1();
         } catch (Exception e) {
             LOGGER.error("", e);
+            throw e;
         } finally {
             LOGGER.info("END test1.");
         }

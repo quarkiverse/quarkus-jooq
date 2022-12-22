@@ -17,40 +17,31 @@ import javax.inject.Qualifier;
 import javax.inject.Singleton;
 
 import org.jboss.logging.Logger;
-import org.jboss.shrinkwrap.api.ShrinkWrap;
-import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.RegisterExtension;
 
-import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.junit.QuarkusTest;
 
 /**
  *
  * @author <a href="mailto:leo.tu.taipei@gmail.com">Leo Tu</a>
  */
 //@Disabled
+@QuarkusTest
 public class InjectTest {
     private static final Logger LOGGER = Logger.getLogger(InjectTest.class);
-
-    @RegisterExtension
-    static final QuarkusUnitTest config = new QuarkusUnitTest()
-            .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class) //
-                    .addAsResource("application.properties", "application.properties") //
-                    .addClasses(
-                            TestServiceBean.class,
-                            MyCustomConfigurationFactory.class));
 
     @Inject
     TestServiceBean testBean;
 
     @Order(1)
     @Test
-    public void test1() {
+    public void test1() throws Exception {
         try {
             testBean.action();
         } catch (Exception e) {
             LOGGER.error("", e);
+            throw e;
         }
     }
 
