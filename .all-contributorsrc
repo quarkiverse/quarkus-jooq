@@ -14,6 +14,16 @@
         "code",
         "maintenance"
       ]
+    },
+    {
+      "login": "Sirz3chs",
+      "name": "Bois Pierre-Antoine",
+      "avatar_url": "https://avatars.githubusercontent.com/u/23245718?v=4",
+      "profile": "https://github.com/Sirz3chs",
+      "contributions": [
+        "code",
+        "maintenance"
+      ]
     }
   ],
   "contributorsPerLine": 7,
@@ -21,5 +31,6 @@
   "projectOwner": "quarkiverse",
   "repoType": "github",
   "repoHost": "https://github.com",
-  "skipCi": true
+  "skipCi": true,
+  "commitConvention": "angular"
 }
