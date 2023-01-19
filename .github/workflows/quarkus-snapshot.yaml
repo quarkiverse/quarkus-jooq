@@ -4,8 +4,8 @@ on:
   watch:
     types: [started]
 
-# For this CI to work, ECOSYSTEM_CI_TOKEN needs to contain a GitHub with rights to close the Quarkus issue that the user/bot has opened,
- # while 'ECOSYSTEM_CI_REPO_PATH' needs to be set to the corresponding path in the 'quarkusio/quarkus-ecosystem-ci' repository
+  # For this CI to work, ECOSYSTEM_CI_TOKEN needs to contain a GitHub with rights to close the Quarkus issue that the user/bot has opened,
+  # while 'ECOSYSTEM_CI_REPO_PATH' needs to be set to the corresponding path in the 'quarkusio/quarkus-ecosystem-ci' repository
 
 env:
   ECOSYSTEM_CI_REPO: quarkusio/quarkus-ecosystem-ci
@@ -27,20 +27,21 @@ jobs:
 
     steps:
       - name: Install yq
-        run: sudo add-apt-repository ppa:rmescandon/yq && sudo apt update && sudo apt install yq -y
+        uses: dcarbone/install-yq-action@v1.0.1
 
       - name: Set up Java
-        uses: actions/setup-java@v1
+        uses: actions/setup-java@v3
         with:
+          distribution: temurin
           java-version: ${{ env.JAVA_VERSION }}
 
       - name: Checkout repo
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           path: current-repo
 
       - name: Checkout Ecosystem
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           repository: ${{ env.ECOSYSTEM_CI_REPO }}
           path: ecosystem-ci
