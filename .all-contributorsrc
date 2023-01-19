@@ -24,6 +24,16 @@
         "code",
         "maintenance"
       ]
+    },
+    {
+      "login": "ranjanashish",
+      "name": "Ashish Ranjan",
+      "avatar_url": "https://avatars.githubusercontent.com/u/113700?v=4",
+      "profile": "https://github.com/ranjanashish",
+      "contributions": [
+        "code",
+        "maintenance"
+      ]
     }
   ],
   "contributorsPerLine": 7,
