@@ -1,0 +1,140 @@
+
+:summaryTableId: quarkus-jooq
+[.configuration-legend]
+icon:lock[title=Fixed at build time] Configuration property fixed at build time - All other configuration properties are overridable at runtime
+[.configuration-reference.searchable, cols="80,.^10,.^10"]
+|===
+
+h|[[quarkus-jooq_configuration]]link:#quarkus-jooq_configuration[Configuration property]
+
+h|Type
+h|Default
+
+a|icon:lock[title=Fixed at build time] [[quarkus-jooq_quarkus.jooq.dialect]]`link:#quarkus-jooq_quarkus.jooq.dialect[quarkus.jooq.dialect]`
+
+[.description]
+--
+The jOOQ dialect
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_JOOQ_DIALECT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_JOOQ_DIALECT+++`
+endif::add-copy-button-to-env-var[]
+--|string 
+|required icon:exclamation-circle[title=Configuration property is required]
+
+
+a|icon:lock[title=Fixed at build time] [[quarkus-jooq_quarkus.jooq.datasource]]`link:#quarkus-jooq_quarkus.jooq.datasource[quarkus.jooq.datasource]`
+
+[.description]
+--
+The jOOQ dataSource
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_JOOQ_DATASOURCE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_JOOQ_DATASOURCE+++`
+endif::add-copy-button-to-env-var[]
+--|string 
+|
+
+
+a|icon:lock[title=Fixed at build time] [[quarkus-jooq_quarkus.jooq.configuration]]`link:#quarkus-jooq_quarkus.jooq.configuration[quarkus.jooq.configuration]`
+
+[.description]
+--
+The jOOQ configuration
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_JOOQ_CONFIGURATION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_JOOQ_CONFIGURATION+++`
+endif::add-copy-button-to-env-var[]
+--|string 
+|
+
+
+a|icon:lock[title=Fixed at build time] [[quarkus-jooq_quarkus.jooq.configuration-inject]]`link:#quarkus-jooq_quarkus.jooq.configuration-inject[quarkus.jooq.configuration-inject]`
+
+[.description]
+--
+The jOOQ configuration by inject named
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_JOOQ_CONFIGURATION_INJECT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_JOOQ_CONFIGURATION_INJECT+++`
+endif::add-copy-button-to-env-var[]
+--|string 
+|
+
+
+a|icon:lock[title=Fixed at build time] [[quarkus-jooq_quarkus.jooq.-named-config-.dialect]]`link:#quarkus-jooq_quarkus.jooq.-named-config-.dialect[quarkus.jooq."named-config".dialect]`
+
+[.description]
+--
+The jOOQ dialect
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_JOOQ__NAMED_CONFIG__DIALECT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_JOOQ__NAMED_CONFIG__DIALECT+++`
+endif::add-copy-button-to-env-var[]
+--|string 
+|required icon:exclamation-circle[title=Configuration property is required]
+
+
+a|icon:lock[title=Fixed at build time] [[quarkus-jooq_quarkus.jooq.-named-config-.datasource]]`link:#quarkus-jooq_quarkus.jooq.-named-config-.datasource[quarkus.jooq."named-config".datasource]`
+
+[.description]
+--
+The jOOQ dataSource
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_JOOQ__NAMED_CONFIG__DATASOURCE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_JOOQ__NAMED_CONFIG__DATASOURCE+++`
+endif::add-copy-button-to-env-var[]
+--|string 
+|
+
+
+a|icon:lock[title=Fixed at build time] [[quarkus-jooq_quarkus.jooq.-named-config-.configuration]]`link:#quarkus-jooq_quarkus.jooq.-named-config-.configuration[quarkus.jooq."named-config".configuration]`
+
+[.description]
+--
+The jOOQ configuration
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_JOOQ__NAMED_CONFIG__CONFIGURATION+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_JOOQ__NAMED_CONFIG__CONFIGURATION+++`
+endif::add-copy-button-to-env-var[]
+--|string 
+|
+
+
+a|icon:lock[title=Fixed at build time] [[quarkus-jooq_quarkus.jooq.-named-config-.configuration-inject]]`link:#quarkus-jooq_quarkus.jooq.-named-config-.configuration-inject[quarkus.jooq."named-config".configuration-inject]`
+
+[.description]
+--
+The jOOQ configuration by inject named
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_JOOQ__NAMED_CONFIG__CONFIGURATION_INJECT+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_JOOQ__NAMED_CONFIG__CONFIGURATION_INJECT+++`
+endif::add-copy-button-to-env-var[]
+--|string 
+|
+
+|===
