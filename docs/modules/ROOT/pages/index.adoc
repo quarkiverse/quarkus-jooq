@@ -13,6 +13,7 @@ In your `pom.xml` file, add:
 <dependency>
     <groupId>io.quarkiverse.jooq</groupId>
     <artifactId>quarkiverse-jooq</artifactId>
+    <version>{project-version}</version>    
 </dependency>
 ----
 
