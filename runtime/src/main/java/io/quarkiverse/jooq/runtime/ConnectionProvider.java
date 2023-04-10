@@ -3,7 +3,7 @@ package io.quarkiverse.jooq.runtime;
 import java.sql.Connection;
 import java.sql.SQLException;
 
-import javax.inject.Provider;
+import jakarta.inject.Provider;
 
 import org.jboss.logging.Logger;
 

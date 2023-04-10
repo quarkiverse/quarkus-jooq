@@ -3,7 +3,7 @@ package io.quarkiverse.jooq.runtime;
 import java.lang.annotation.*;
 import java.util.Objects;
 
-import javax.inject.Qualifier;
+import jakarta.inject.Qualifier;
 
 import org.jboss.logging.Logger;
 import org.jooq.DSLContext;
