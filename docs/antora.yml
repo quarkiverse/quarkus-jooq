@@ -1,5 +1,5 @@
-name: quarkiverse-project
-title: Quarkiverse <YOUR_PROJECT>
+name: quarkus-jooq
+title: jOOQ
 version: dev
 nav:
   - modules/ROOT/nav.adoc
