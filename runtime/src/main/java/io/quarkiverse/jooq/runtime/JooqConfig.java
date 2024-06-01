@@ -21,6 +21,20 @@ public class JooqConfig {
     public JooqItemConfig defaultConfig;
 
     /**
+     * Whether to automatically register jOOQ records/POJOs
+     * for reflection.
+     */
+    @ConfigItem(defaultValue = "true")
+    public Boolean registerClassesForReflection;
+
+    /**
+     * Regex used to determine classes to be registered for
+     * reflection.
+     */
+    @ConfigItem(defaultValue = ".+\\.tables\\.(pojos|records)\\..+")
+    public String generatedClassesRegex;
+
+    /**
      * Additional configs.
      */
     @ConfigItem(name = ConfigItem.PARENT)
