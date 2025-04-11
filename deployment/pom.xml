@@ -11,10 +11,6 @@
     <artifactId>quarkus-jooq-deployment</artifactId>
     <name>Quarkus jOOQ - Deployment</name>
 
-    <properties>
-        <maven.surefire.version>3.0.0-M4</maven.surefire.version>
-    </properties>
-
     <dependencies>
         <dependency>
             <groupId>io.quarkus</groupId>
