@@ -76,7 +76,7 @@ public class JooqProcessor {
         reflectiveClass.produce(new ReflectiveClassBuildItem(true, false, AbstractDslContextProducer.class));
         reflectiveClass.produce(new ReflectiveClassBuildItem(false, true, LoggerListener.class));
 
-        if (!isPresentDialect(jooqConfig.defaultConfig)) {
+        if (!isPresentDialect(jooqConfig.defaultConfig())) {
             log.warn("No default sql-dialect been defined");
         }
 
@@ -95,7 +95,7 @@ public class JooqProcessor {
     }
 
     protected boolean isUnconfigured(JooqConfig jooqConfig) {
-        if (!isPresentDialect(jooqConfig.defaultConfig) && jooqConfig.namedConfig.isEmpty()) {
+        if (!isPresentDialect(jooqConfig.defaultConfig()) && jooqConfig.namedConfig().isEmpty()) {
             // No jOOQ has been configured so bail out
             log.debug("No jOOQ has been configured");
             return true;
@@ -116,7 +116,7 @@ public class JooqProcessor {
                 .superClass(producerClass).build();
         classCreator.addAnnotation(ApplicationScoped.class);
 
-        JooqItemConfig defaultConfig = jooqConfig.defaultConfig;
+        JooqItemConfig defaultConfig = jooqConfig.defaultConfig();
         if (isPresentDialect(defaultConfig)) {
             Optional<JdbcDataSourceBuildItem> defaultJdbcDataSourceBuildItem = jdbcDataSourcesBuildItem.stream()
                     .filter(JdbcDataSourceBuildItem::isDefault)
@@ -126,9 +126,9 @@ public class JooqProcessor {
                 log.warn("Default dataSource not found");
                 System.err.println(">>> Default dataSource not found");
             }
-            if (defaultConfig.datasource.isPresent()
-                    && !DataSourceUtil.DEFAULT_DATASOURCE_NAME.equals(defaultConfig.datasource.get())) {
-                log.warn("Skip default dataSource name: " + defaultConfig.datasource.get());
+            if (defaultConfig.datasource().isPresent()
+                    && !DataSourceUtil.DEFAULT_DATASOURCE_NAME.equals(defaultConfig.datasource().get())) {
+                log.warn("Skip default dataSource name: " + defaultConfig.datasource().get());
             }
             String dsVarName = "defaultDataSource";
 
@@ -139,7 +139,7 @@ public class JooqProcessor {
             defaultDataSourceCreator.addAnnotation(Inject.class);
 
             //
-            String dialect = defaultConfig.dialect;
+            String dialect = defaultConfig.dialect();
             MethodCreator defaultDslContextMethodCreator = classCreator.getMethodCreator("createDefaultDslContext",
                     DSLContext.class);
 
@@ -153,8 +153,8 @@ public class JooqProcessor {
                     FieldDescriptor.of(classCreator.getClassName(), dsVarName, AgroalDataSource.class.getName()),
                     defaultDslContextMethodCreator.getThis());
 
-            if (defaultConfig.configurationInject.isPresent()) {
-                String configurationInjectName = defaultConfig.configurationInject.get();
+            if (defaultConfig.configurationInject().isPresent()) {
+                String configurationInjectName = defaultConfig.configurationInject().get();
                 String injectVarName = "configuration_" + HashUtil.sha1(configurationInjectName);
 
                 FieldCreator configurationCreator = classCreator.getFieldCreator(injectVarName, JooqCustomContext.class)
@@ -175,11 +175,11 @@ public class JooqProcessor {
                                         JooqCustomContext.class),
                                 defaultDslContextMethodCreator.getThis(), dialectRH, dataSourceRH, configurationRH));
             } else {
-                ResultHandle configurationRH = defaultConfig.configuration.isPresent()
-                        ? defaultDslContextMethodCreator.load(defaultConfig.configuration.get())
+                ResultHandle configurationRH = defaultConfig.configuration().isPresent()
+                        ? defaultDslContextMethodCreator.load(defaultConfig.configuration().get())
                         : defaultDslContextMethodCreator.loadNull();
 
-                defaultConfig.configuration
+                defaultConfig.configuration()
                         .ifPresent(s -> unremovableBeans.produce(new UnremovableBeanBuildItem(new BeanClassNameExclusion(s))));
 
                 defaultDslContextMethodCreator.returnValue(defaultDslContextMethodCreator.invokeVirtualMethod(
@@ -189,19 +189,19 @@ public class JooqProcessor {
             }
         }
 
-        for (Entry<String, JooqItemConfig> configEntry : jooqConfig.namedConfig.entrySet()) {
+        for (Entry<String, JooqItemConfig> configEntry : jooqConfig.namedConfig().entrySet()) {
             String named = configEntry.getKey();
             JooqItemConfig namedConfig = configEntry.getValue();
             if (!isPresentDialect(namedConfig)) {
                 log.warnv("!isPresentDialect(namedConfig), named: {0}, namedConfig: {1}", named, namedConfig);
                 continue;
             }
-            if (!namedConfig.datasource.isPresent()) {
+            if (!namedConfig.datasource().isPresent()) {
                 log.warnv("(!config.datasource.isPresent()), named: {0}, namedConfig: {1}", named, namedConfig);
                 continue;
             }
 
-            String dataSourceName = namedConfig.datasource.get();
+            String dataSourceName = namedConfig.datasource().get();
             Optional<JdbcDataSourceBuildItem> namedJdbcDataSourceBuildItem = jdbcDataSourcesBuildItem.stream()
                     .filter(j -> j.getName().equals(dataSourceName))
                     .findFirst();
@@ -230,14 +230,14 @@ public class JooqProcessor {
             namedDslContextMethodCreator.addAnnotation(AnnotationInstance.create(DSL_CONTEXT_QUALIFIER, null,
                     new AnnotationValue[] { AnnotationValue.createStringValue("value", named) }));
 
-            ResultHandle dialectRH = namedDslContextMethodCreator.load(namedConfig.dialect);
+            ResultHandle dialectRH = namedDslContextMethodCreator.load(namedConfig.dialect());
 
             ResultHandle dataSourceRH = namedDslContextMethodCreator.readInstanceField(
                     FieldDescriptor.of(classCreator.getClassName(), dsVarName, AgroalDataSource.class.getName()),
                     namedDslContextMethodCreator.getThis());
 
-            if (namedConfig.configurationInject.isPresent()) {
-                String configurationInjectName = namedConfig.configurationInject.get();
+            if (namedConfig.configurationInject().isPresent()) {
+                String configurationInjectName = namedConfig.configurationInject().get();
                 String injectVarName = "configurationInjectName" + HashUtil.sha1(configurationInjectName);
 
                 FieldCreator configurationCreator = classCreator.getFieldCreator(injectVarName, JooqCustomContext.class)
@@ -256,11 +256,11 @@ public class JooqProcessor {
                                 DSLContext.class, String.class, AgroalDataSource.class, JooqCustomContext.class),
                         namedDslContextMethodCreator.getThis(), dialectRH, dataSourceRH, configurationRH));
             } else {
-                ResultHandle configurationRH = namedConfig.configuration.isPresent()
-                        ? namedDslContextMethodCreator.load(namedConfig.configuration.get())
+                ResultHandle configurationRH = namedConfig.configuration().isPresent()
+                        ? namedDslContextMethodCreator.load(namedConfig.configuration().get())
                         : namedDslContextMethodCreator.loadNull();
 
-                namedConfig.configuration
+                namedConfig.configuration()
                         .ifPresent(s -> unremovableBeans.produce(new UnremovableBeanBuildItem(new BeanClassNameExclusion(s))));
 
                 namedDslContextMethodCreator.returnValue(namedDslContextMethodCreator.invokeVirtualMethod(
@@ -274,6 +274,6 @@ public class JooqProcessor {
     }
 
     protected boolean isPresentDialect(JooqItemConfig itemConfig) {
-        return itemConfig.dialect != null && !itemConfig.dialect.isEmpty();
+        return itemConfig.dialect() != null && !itemConfig.dialect().isEmpty();
     }
 }

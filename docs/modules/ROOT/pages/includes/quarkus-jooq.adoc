@@ -10,7 +10,8 @@ h|[[quarkus-jooq_configuration]]link:#quarkus-jooq_configuration[Configuration p
 h|Type
 h|Default
 
-a|icon:lock[title=Fixed at build time] [[quarkus-jooq_quarkus.jooq.dialect]]`link:#quarkus-jooq_quarkus.jooq.dialect[quarkus.jooq.dialect]`
+a|icon:lock[title=Fixed at build time] [[quarkus-jooq_quarkus-jooq-dialect]]`link:#quarkus-jooq_quarkus-jooq-dialect[quarkus.jooq.dialect]`
+
 
 [.description]
 --
@@ -26,7 +27,8 @@ endif::add-copy-button-to-env-var[]
 |required icon:exclamation-circle[title=Configuration property is required]
 
 
-a|icon:lock[title=Fixed at build time] [[quarkus-jooq_quarkus.jooq.datasource]]`link:#quarkus-jooq_quarkus.jooq.datasource[quarkus.jooq.datasource]`
+a|icon:lock[title=Fixed at build time] [[quarkus-jooq_quarkus-jooq-datasource]]`link:#quarkus-jooq_quarkus-jooq-datasource[quarkus.jooq.datasource]`
+
 
 [.description]
 --
@@ -42,7 +44,8 @@ endif::add-copy-button-to-env-var[]
 |
 
 
-a|icon:lock[title=Fixed at build time] [[quarkus-jooq_quarkus.jooq.configuration]]`link:#quarkus-jooq_quarkus.jooq.configuration[quarkus.jooq.configuration]`
+a|icon:lock[title=Fixed at build time] [[quarkus-jooq_quarkus-jooq-configuration]]`link:#quarkus-jooq_quarkus-jooq-configuration[quarkus.jooq.configuration]`
+
 
 [.description]
 --
@@ -58,7 +61,8 @@ endif::add-copy-button-to-env-var[]
 |
 
 
-a|icon:lock[title=Fixed at build time] [[quarkus-jooq_quarkus.jooq.configuration-inject]]`link:#quarkus-jooq_quarkus.jooq.configuration-inject[quarkus.jooq.configuration-inject]`
+a|icon:lock[title=Fixed at build time] [[quarkus-jooq_quarkus-jooq-configuration-inject]]`link:#quarkus-jooq_quarkus-jooq-configuration-inject[quarkus.jooq.configuration-inject]`
+
 
 [.description]
 --
@@ -74,7 +78,8 @@ endif::add-copy-button-to-env-var[]
 |
 
 
-a|icon:lock[title=Fixed at build time] [[quarkus-jooq_quarkus.jooq.-named-config-.dialect]]`link:#quarkus-jooq_quarkus.jooq.-named-config-.dialect[quarkus.jooq."named-config".dialect]`
+a|icon:lock[title=Fixed at build time] [[quarkus-jooq_quarkus-jooq-named-config-dialect]]`link:#quarkus-jooq_quarkus-jooq-named-config-dialect[quarkus.jooq."named-config".dialect]`
+
 
 [.description]
 --
@@ -90,7 +95,8 @@ endif::add-copy-button-to-env-var[]
 |required icon:exclamation-circle[title=Configuration property is required]
 
 
-a|icon:lock[title=Fixed at build time] [[quarkus-jooq_quarkus.jooq.-named-config-.datasource]]`link:#quarkus-jooq_quarkus.jooq.-named-config-.datasource[quarkus.jooq."named-config".datasource]`
+a|icon:lock[title=Fixed at build time] [[quarkus-jooq_quarkus-jooq-named-config-datasource]]`link:#quarkus-jooq_quarkus-jooq-named-config-datasource[quarkus.jooq."named-config".datasource]`
+
 
 [.description]
 --
@@ -106,7 +112,8 @@ endif::add-copy-button-to-env-var[]
 |
 
 
-a|icon:lock[title=Fixed at build time] [[quarkus-jooq_quarkus.jooq.-named-config-.configuration]]`link:#quarkus-jooq_quarkus.jooq.-named-config-.configuration[quarkus.jooq."named-config".configuration]`
+a|icon:lock[title=Fixed at build time] [[quarkus-jooq_quarkus-jooq-named-config-configuration]]`link:#quarkus-jooq_quarkus-jooq-named-config-configuration[quarkus.jooq."named-config".configuration]`
+
 
 [.description]
 --
@@ -122,7 +129,8 @@ endif::add-copy-button-to-env-var[]
 |
 
 
-a|icon:lock[title=Fixed at build time] [[quarkus-jooq_quarkus.jooq.-named-config-.configuration-inject]]`link:#quarkus-jooq_quarkus.jooq.-named-config-.configuration-inject[quarkus.jooq."named-config".configuration-inject]`
+a|icon:lock[title=Fixed at build time] [[quarkus-jooq_quarkus-jooq-named-config-configuration-inject]]`link:#quarkus-jooq_quarkus-jooq-named-config-configuration-inject[quarkus.jooq."named-config".configuration-inject]`
+
 
 [.description]
 --
