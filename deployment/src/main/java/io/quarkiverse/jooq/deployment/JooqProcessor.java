@@ -3,6 +3,8 @@ package io.quarkiverse.jooq.deployment;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.function.BooleanSupplier;
+import java.util.regex.Pattern;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Default;
@@ -31,8 +33,10 @@ import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.deployment.annotations.ExecutionTime;
 import io.quarkus.deployment.annotations.Record;
+import io.quarkus.deployment.builditem.CombinedIndexBuildItem;
 import io.quarkus.deployment.builditem.FeatureBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.ReflectiveClassBuildItem;
+import io.quarkus.deployment.pkg.steps.NativeBuild;
 import io.quarkus.deployment.recording.RecorderContext;
 import io.quarkus.gizmo.*;
 import io.quarkus.runtime.util.HashUtil;
@@ -57,6 +61,18 @@ public class JooqProcessor {
     @Record(ExecutionTime.STATIC_INIT)
     FeatureBuildItem featureBuildItem() {
         return new FeatureBuildItem(FEATURE);
+    }
+
+    @BuildStep(onlyIf = { NativeBuild.class, RegisterClassesForReflectionEnabled.class })
+    public void registerReflections(CombinedIndexBuildItem indexBuildItem,
+            BuildProducer<ReflectiveClassBuildItem> reflectiveClass,
+            JooqConfig jooqConfig) {
+        Pattern jooqDBReflectClasses = Pattern.compile(jooqConfig.generatedClassesPattern());
+        indexBuildItem.getIndex()
+                .getKnownClasses()
+                .stream()
+                .filter(o -> jooqDBReflectClasses.matcher(o.name().toString()).matches())
+                .forEach(clazz -> reflectiveClass.produce(new ReflectiveClassBuildItem(true, true, clazz.name().toString())));
     }
 
     @SuppressWarnings("unchecked")
@@ -275,5 +291,13 @@ public class JooqProcessor {
 
     protected boolean isPresentDialect(JooqItemConfig itemConfig) {
         return itemConfig.dialect() != null && !itemConfig.dialect().isEmpty();
+    }
+
+    static class RegisterClassesForReflectionEnabled implements BooleanSupplier {
+        JooqConfig jooqConfig;
+
+        public boolean getAsBoolean() {
+            return jooqConfig.registerGeneratedClassesForReflection();
+        }
     }
 }
