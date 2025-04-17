@@ -22,7 +22,7 @@
         <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <quarkus.version>3.15.1</quarkus.version>
+        <quarkus.version>3.21.3</quarkus.version>
         <org.jooq.version>3.19.22</org.jooq.version>
     </properties>
 
