@@ -22,8 +22,9 @@
         <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <quarkus.version>3.15.1</quarkus.version>
-        <org.jooq.version>3.19.22</org.jooq.version>
+
+        <quarkus.version>3.15.3</quarkus.version>
+        <org.jooq.version>3.20.3</org.jooq.version>
     </properties>
 
     <scm>
@@ -105,6 +106,7 @@
                 <module>docs</module>
             </modules>
         </profile>
+
         <profile>
             <id>it</id>
             <activation>
@@ -117,6 +119,7 @@
                 <module>integration-tests</module>
             </modules>
         </profile>
+
         <profile>
             <id>jooq-pro</id>
             <activation>
@@ -135,6 +138,7 @@
                     </plugin>
                 </plugins>
             </build>
+
             <modules>
                 <module>quarkus-jooq-pro</module>
             </modules>

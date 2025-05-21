@@ -3,10 +3,11 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
+
     <parent>
         <groupId>io.quarkiverse.jooq</groupId>
         <artifactId>quarkus-jooq-parent</artifactId>
-        <version>0.2.2-SNAPSHOT</version>
+        <version>999-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -20,4 +21,9 @@
         <module>deployment</module>
         <module>runtime</module>
     </modules>
+
+    <properties>
+        <jooq.groupId>org.jooq.pro-java-17</jooq.groupId>
+    </properties>
+
 </project>
