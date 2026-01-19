@@ -68,11 +68,13 @@ public class JooqProcessor {
             BuildProducer<ReflectiveClassBuildItem> reflectiveClass,
             JooqConfig jooqConfig) {
         Pattern jooqDBReflectClasses = Pattern.compile(jooqConfig.generatedClassesPattern());
-        indexBuildItem.getIndex()
+        final var forReflection = indexBuildItem.getIndex()
                 .getKnownClasses()
                 .stream()
-                .filter(o -> jooqDBReflectClasses.matcher(o.name().toString()).matches())
-                .forEach(clazz -> reflectiveClass.produce(new ReflectiveClassBuildItem(true, true, clazz.name().toString())));
+                .map(classInfo -> classInfo.name().toString())
+                .filter(o -> jooqDBReflectClasses.matcher(o).matches())
+                .toArray(String[]::new);
+        reflectiveClass.produce(ReflectiveClassBuildItem.builder(forReflection).constructors().methods().fields().build());
     }
 
     @SuppressWarnings("unchecked")
@@ -89,8 +91,9 @@ public class JooqProcessor {
             return;
         }
 
-        reflectiveClass.produce(new ReflectiveClassBuildItem(true, false, AbstractDslContextProducer.class));
-        reflectiveClass.produce(new ReflectiveClassBuildItem(false, true, LoggerListener.class));
+        reflectiveClass
+                .produce(ReflectiveClassBuildItem.builder(AbstractDslContextProducer.class).constructors().methods().build());
+        reflectiveClass.produce(ReflectiveClassBuildItem.builder(LoggerListener.class).constructors().fields().build());
 
         if (!isPresentDialect(jooqConfig.defaultConfig())) {
             log.warn("No default sql-dialect been defined");
