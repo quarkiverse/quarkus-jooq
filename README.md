@@ -166,6 +166,63 @@ quarkus.jooq.dsl1.datasource=datasource1
 quarkus.jooq.dsl1.configuration=io.quarkiverse.jooq.MyCustomConfiguration1
 ```
 
+### Reactive Contexts (R2DBC)
+
+A context can be built over an R2DBC `io.r2dbc.spi.ConnectionFactory` instead of a JDBC datasource.
+The resulting `DSLContext` is non-blocking: it serves jOOQ's reactive API
+(`Publisher`-returning queries and `transactionPublisher`) rather than `execute()` / `fetch()`.
+
+Quarkus has no R2DBC datasource model — no Dev Services, no health check, no
+`quarkus.datasource.*` equivalent — so the application owns the driver, the pool and its lifecycle,
+and exposes the connection factory as a `@Named` bean:
+
+```java
+@ApplicationScoped
+public class ReactiveConnectionFactoryProducer {
+
+    @ConfigProperty(name = "myapp.r2dbc.url")
+    String url;
+
+    @Produces
+    @Singleton
+    @Named("mainConnectionFactory")
+    public ConnectionFactory createConnectionFactory() {
+        return ConnectionFactories.get(url);
+    }
+}
+```
+
+The context then references that bean name with `connection-factory` in place of `datasource`:
+
+```yaml
+# reactive context
+quarkus.jooq.reactive.dialect=Postgres
+quarkus.jooq.reactive.connection-factory=mainConnectionFactory
+```
+
+```java
+@Inject
+@Named("reactive")
+DSLContext dsl;
+
+Flux.from(dsl.transactionPublisher(configuration -> Flux.concat(
+        configuration.dsl().insertInto(DEMO, ID).values("a"),
+        configuration.dsl().insertInto(DEMO, ID).values("b"))));
+```
+
+Unlike `transactionResultAsync` wrapped around a lazily assembled pipeline, `transactionPublisher`
+holds one connection for the whole publisher, so a failure rolls back the earlier statements.
+Note that the connection a query uses comes from the `Configuration` that built it: a collaborator
+using its own injected `DSLContext` gets its own connection and does not join the transaction, so
+`configuration.dsl()` has to be threaded through.
+
+Setting both `datasource` and `connection-factory` on one context fails the build.
+
+The extension brings the R2DBC SPI only (jOOQ already depends on it) — never a driver and never a
+pool. Add a driver (`io.r2dbc:r2dbc-postgresql`, `io.r2dbc:r2dbc-h2`, …) and, if wanted,
+`io.r2dbc:r2dbc-pool` yourself. Reactive and JDBC contexts can coexist in one application, which is
+what keeps Flyway and blocking code working alongside a reactive path.
+
 ## Native Mode Support
 
 Native compilation is supported in the standard Quarkus way using:

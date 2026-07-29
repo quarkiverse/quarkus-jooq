@@ -34,5 +34,11 @@
             <artifactId>quarkus-jooq-deployment</artifactId>
             <version>${project.version}</version>
         </dependency>
+
+        <!-- The inherited createDslContextProducerBean names io.r2dbc.spi.ConnectionFactory. -->
+        <dependency>
+            <groupId>io.r2dbc</groupId>
+            <artifactId>r2dbc-spi</artifactId>
+        </dependency>
     </dependencies>
 </project>
