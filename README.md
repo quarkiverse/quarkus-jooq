@@ -218,6 +218,10 @@ using its own injected `DSLContext` gets its own connection and does not join th
 
 Setting both `datasource` and `connection-factory` on one context fails the build.
 
+The default `JooqCustomContext.apply` sets a 60 second query timeout, which jOOQ applies through
+`java.sql.Statement`. R2DBC has no equivalent, so a reactive context runs without that timeout and
+has to get its own bound from the driver or the surrounding pipeline.
+
 The extension brings the R2DBC SPI only (jOOQ already depends on it) — never a driver and never a
 pool. Add a driver (`io.r2dbc:r2dbc-postgresql`, `io.r2dbc:r2dbc-h2`, …) and, if wanted,
 `io.r2dbc:r2dbc-pool` yourself. Reactive and JDBC contexts can coexist in one application, which is
@@ -230,6 +234,11 @@ Native compilation is supported in the standard Quarkus way using:
 ```shell
  ./mvnw package -Pnative 
 ```
+
+When a context is configured with `connection-factory`, the extension registers the R2DBC
+`ConnectionFactoryProvider` implementations found on the classpath as native service providers.
+Quarkus leaves GraalVM's service loader feature off by default, and without that registration
+`ConnectionFactories.get(url)` would report an empty driver list in the native binary.
 
 ## jOOQ Commercial Distributions
 

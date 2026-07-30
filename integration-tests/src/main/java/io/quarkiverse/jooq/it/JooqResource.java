@@ -21,6 +21,7 @@ import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.Statement;
+import java.time.Duration;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
@@ -38,10 +39,17 @@ import jakarta.ws.rs.Path;
 
 import org.jboss.logging.Logger;
 import org.jooq.DSLContext;
+import org.jooq.Field;
+import org.jooq.Record1;
+import org.jooq.Table;
 import org.jooq.impl.DSL;
+import org.jooq.impl.SQLDataType;
 
 import io.quarkus.runtime.ShutdownEvent;
 import io.quarkus.runtime.StartupEvent;
+import io.smallrye.common.annotation.Blocking;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 @Path("/jooq")
 @ApplicationScoped
@@ -49,13 +57,32 @@ public class JooqResource {
 
     private static final Logger LOGGER = Logger.getLogger(JooqResource.class);
 
+    @Inject
+    TestBean testBean;
+
     @GET
     public String hello() {
         return "Hello jooq";
     }
 
+    /**
+     * Blocks on the reactive pipeline, so it must not run on the event loop.
+     */
+    @GET
+    @Path("/reactive")
+    @Blocking
+    public String reactive() {
+        return String.valueOf(testBean.reactiveRoundTrip());
+    }
+
     @ApplicationScoped
     static class TestBean {
+
+        private static final Duration REACTIVE_TIMEOUT = Duration.ofSeconds(30);
+
+        private static final Table<?> REACTIVE_DEMO = DSL.table(DSL.name("reactive_demo"));
+        private static final Field<String> REACTIVE_ID = DSL.field(DSL.name("id"),
+                SQLDataType.VARCHAR(32).nullable(false));
 
         @Inject
         DSLContext dsl; // default
@@ -67,6 +94,14 @@ public class JooqResource {
         @Inject
         @Named("dsl2")
         DSLContext dsl2;
+
+        /**
+         * Injected here rather than only into the resource so that a reactive context that cannot be produced fails
+         * the application at startup, which is what the native binary is exercised for.
+         */
+        @Inject
+        @Named("reactive")
+        DSLContext reactiveDsl;
 
         private ServiceAction action;
         private ServiceAction action1;
@@ -89,6 +124,31 @@ public class JooqResource {
 
         void onStop(@Observes ShutdownEvent event) {
             LOGGER.debug("onStop, event=" + event);
+        }
+
+        /**
+         * {@code transactionPublisher} holds one connection across both inserts, so this covers the reason a reactive
+         * context exists rather than only that one can be produced.
+         *
+         * @return the number of rows the transaction committed
+         */
+        int reactiveRoundTrip() {
+            Mono.from(reactiveDsl.createTableIfNotExists(REACTIVE_DEMO)
+                    .column(REACTIVE_ID)
+                    .constraint(DSL.primaryKey(REACTIVE_ID))).block(REACTIVE_TIMEOUT);
+            Mono.from(reactiveDsl.deleteFrom(REACTIVE_DEMO)).block(REACTIVE_TIMEOUT);
+
+            Flux.from(reactiveDsl.transactionPublisher(configuration -> Flux.concat(
+                    configuration.dsl().insertInto(REACTIVE_DEMO, REACTIVE_ID).values("id-a"),
+                    configuration.dsl().insertInto(REACTIVE_DEMO, REACTIVE_ID).values("id-b"))))
+                    .collectList()
+                    .block(REACTIVE_TIMEOUT);
+
+            int rows = Mono.from(reactiveDsl.selectCount().from(REACTIVE_DEMO))
+                    .map(Record1::value1)
+                    .block(REACTIVE_TIMEOUT);
+            LOGGER.debugv("reactiveRoundTrip rows: {0}", rows);
+            return rows;
         }
 
         // https://github.com/quarkusio/quarkus/issues/2224

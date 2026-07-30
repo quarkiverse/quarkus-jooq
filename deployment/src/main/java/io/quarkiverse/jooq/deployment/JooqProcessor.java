@@ -36,12 +36,14 @@ import io.quarkus.deployment.annotations.Record;
 import io.quarkus.deployment.builditem.CombinedIndexBuildItem;
 import io.quarkus.deployment.builditem.FeatureBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.ReflectiveClassBuildItem;
+import io.quarkus.deployment.builditem.nativeimage.ServiceProviderBuildItem;
 import io.quarkus.deployment.pkg.steps.NativeBuild;
 import io.quarkus.deployment.recording.RecorderContext;
 import io.quarkus.gizmo.*;
 import io.quarkus.runtime.configuration.ConfigurationException;
 import io.quarkus.runtime.util.HashUtil;
 import io.r2dbc.spi.ConnectionFactory;
+import io.r2dbc.spi.ConnectionFactoryProvider;
 
 public class JooqProcessor {
 
@@ -63,6 +65,21 @@ public class JooqProcessor {
     @Record(ExecutionTime.STATIC_INIT)
     FeatureBuildItem featureBuildItem() {
         return new FeatureBuildItem(FEATURE);
+    }
+
+    /**
+     * {@link io.r2dbc.spi.ConnectionFactories} discovers drivers through {@link java.util.ServiceLoader}, and Quarkus
+     * turns GraalVM's service loader feature off by default ({@code quarkus.native.auto-service-loader-registration}),
+     * so without this the native image finds no provider and reports an empty driver list at first use.
+     */
+    @BuildStep(onlyIf = NativeBuild.class)
+    void registerConnectionFactoryProviders(JooqConfig jooqConfig,
+            BuildProducer<ServiceProviderBuildItem> serviceProvider) {
+        if (!hasReactiveContext(jooqConfig)) {
+            return;
+        }
+        serviceProvider
+                .produce(ServiceProviderBuildItem.allProvidersFromClassPath(ConnectionFactoryProvider.class.getName()));
     }
 
     @BuildStep(onlyIf = { NativeBuild.class, RegisterClassesForReflectionEnabled.class })
@@ -135,9 +152,8 @@ public class JooqProcessor {
         classCreator.addAnnotation(ApplicationScoped.class);
 
         JooqItemConfig defaultConfig = jooqConfig.defaultConfig();
+        requireSingleConnectionSource(DataSourceUtil.DEFAULT_DATASOURCE_NAME, defaultConfig);
         if (isPresentDialect(defaultConfig)) {
-            requireSingleConnectionSource(DataSourceUtil.DEFAULT_DATASOURCE_NAME, defaultConfig);
-
             Class<?> connectionSourceType = connectionSourceType(defaultConfig);
             String dsVarName = isReactive(defaultConfig) ? "defaultConnectionFactory" : "defaultDataSource";
 
@@ -180,7 +196,7 @@ public class JooqProcessor {
 
             if (defaultConfig.configurationInject().isPresent()) {
                 String configurationInjectName = defaultConfig.configurationInject().get();
-                String injectVarName = "configuration_" + HashUtil.sha1(configurationInjectName);
+                String injectVarName = configurationInjectFieldName(DataSourceUtil.DEFAULT_DATASOURCE_NAME);
 
                 FieldCreator configurationCreator = classCreator.getFieldCreator(injectVarName, JooqCustomContext.class)
                         .setModifiers(Opcodes.ACC_MODULE);
@@ -216,11 +232,11 @@ public class JooqProcessor {
         for (Entry<String, JooqItemConfig> configEntry : jooqConfig.namedConfig().entrySet()) {
             String named = configEntry.getKey();
             JooqItemConfig namedConfig = configEntry.getValue();
+            requireSingleConnectionSource(named, namedConfig);
             if (!isPresentDialect(namedConfig)) {
                 log.warnv("!isPresentDialect(namedConfig), named: {0}, namedConfig: {1}", named, namedConfig);
                 continue;
             }
-            requireSingleConnectionSource(named, namedConfig);
             if (!namedConfig.datasource().isPresent() && !namedConfig.connectionFactory().isPresent()) {
                 log.warnv("Neither datasource nor connection-factory is present, named: {0}, namedConfig: {1}", named,
                         namedConfig);
@@ -268,7 +284,7 @@ public class JooqProcessor {
 
             if (namedConfig.configurationInject().isPresent()) {
                 String configurationInjectName = namedConfig.configurationInject().get();
-                String injectVarName = "configurationInjectName" + HashUtil.sha1(configurationInjectName);
+                String injectVarName = configurationInjectFieldName(named);
 
                 FieldCreator configurationCreator = classCreator.getFieldCreator(injectVarName, JooqCustomContext.class)
                         .setModifiers(Opcodes.ACC_MODULE);
@@ -311,6 +327,20 @@ public class JooqProcessor {
      */
     private static boolean isReactive(JooqItemConfig itemConfig) {
         return itemConfig.connectionFactory().isPresent();
+    }
+
+    static boolean hasReactiveContext(JooqConfig jooqConfig) {
+        return isReactive(jooqConfig.defaultConfig())
+                || jooqConfig.namedConfig().values().stream().anyMatch(JooqProcessor::isReactive);
+    }
+
+    /**
+     * Keyed on the context, not on the injected bean name: two contexts may share one {@link JooqCustomContext} bean,
+     * and a field name derived from that bean would have them collide on a single field, which Gizmo answers by
+     * re-annotating the existing one.
+     */
+    static String configurationInjectFieldName(String contextName) {
+        return "configurationInject_" + HashUtil.sha1(contextName);
     }
 
     private static Class<?> connectionSourceType(JooqItemConfig itemConfig) {
