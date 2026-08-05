@@ -42,6 +42,25 @@ endif::add-copy-button-to-env-var[]
 |string
 |
 
+a|icon:lock[title=Fixed at build time] [[quarkus-jooq_quarkus-jooq-connection-factory]] [.property-path]##link:#quarkus-jooq_quarkus-jooq-connection-factory[`quarkus.jooq.connection-factory`]##
+
+[.description]
+--
+The name of a CDI bean of type `io.r2dbc.spi.ConnectionFactory` to build a reactive `DSLContext` from, instead of a blocking JDBC dataSource. Quarkus has no R2DBC dataSource model, so the application owns the connection factory and its pool and exposes it as a `@Named` bean.
+
+Mutually exclusive with `datasource`.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_JOOQ_CONNECTION_FACTORY+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_JOOQ_CONNECTION_FACTORY+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
 a|icon:lock[title=Fixed at build time] [[quarkus-jooq_quarkus-jooq-configuration]] [.property-path]##link:#quarkus-jooq_quarkus-jooq-configuration[`quarkus.jooq.configuration`]##
 
 [.description]
@@ -139,6 +158,25 @@ Environment variable: env_var_with_copy_button:+++QUARKUS_JOOQ__NAMED_CONFIG__DA
 endif::add-copy-button-to-env-var[]
 ifndef::add-copy-button-to-env-var[]
 Environment variable: `+++QUARKUS_JOOQ__NAMED_CONFIG__DATASOURCE+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
+a|icon:lock[title=Fixed at build time] [[quarkus-jooq_quarkus-jooq-named-config-connection-factory]] [.property-path]##link:#quarkus-jooq_quarkus-jooq-named-config-connection-factory[`quarkus.jooq."named-config".connection-factory`]##
+
+[.description]
+--
+The name of a CDI bean of type `io.r2dbc.spi.ConnectionFactory` to build a reactive `DSLContext` from, instead of a blocking JDBC dataSource. Quarkus has no R2DBC dataSource model, so the application owns the connection factory and its pool and exposes it as a `@Named` bean.
+
+Mutually exclusive with `datasource`.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_JOOQ__NAMED_CONFIG__CONNECTION_FACTORY+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_JOOQ__NAMED_CONFIG__CONNECTION_FACTORY+++`
 endif::add-copy-button-to-env-var[]
 --
 |string

@@ -21,6 +21,16 @@ public interface JooqItemConfig {
     Optional<String> datasource();
 
     /**
+     * The name of a CDI bean of type {@code io.r2dbc.spi.ConnectionFactory} to build a reactive
+     * {@code DSLContext} from, instead of a blocking JDBC dataSource. Quarkus has no R2DBC
+     * dataSource model, so the application owns the connection factory and its pool and exposes
+     * it as a {@code @Named} bean.
+     * <p>
+     * Mutually exclusive with {@code datasource}.
+     */
+    Optional<String> connectionFactory();
+
+    /**
      * The jOOQ configuration
      */
     Optional<String> configuration();

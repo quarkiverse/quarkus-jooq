@@ -36,10 +36,14 @@ import io.quarkus.deployment.annotations.Record;
 import io.quarkus.deployment.builditem.CombinedIndexBuildItem;
 import io.quarkus.deployment.builditem.FeatureBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.ReflectiveClassBuildItem;
+import io.quarkus.deployment.builditem.nativeimage.ServiceProviderBuildItem;
 import io.quarkus.deployment.pkg.steps.NativeBuild;
 import io.quarkus.deployment.recording.RecorderContext;
 import io.quarkus.gizmo.*;
+import io.quarkus.runtime.configuration.ConfigurationException;
 import io.quarkus.runtime.util.HashUtil;
+import io.r2dbc.spi.ConnectionFactory;
+import io.r2dbc.spi.ConnectionFactoryProvider;
 
 public class JooqProcessor {
 
@@ -61,6 +65,21 @@ public class JooqProcessor {
     @Record(ExecutionTime.STATIC_INIT)
     FeatureBuildItem featureBuildItem() {
         return new FeatureBuildItem(FEATURE);
+    }
+
+    /**
+     * {@link io.r2dbc.spi.ConnectionFactories} discovers drivers through {@link java.util.ServiceLoader}, and Quarkus
+     * turns GraalVM's service loader feature off by default ({@code quarkus.native.auto-service-loader-registration}),
+     * so without this the native image finds no provider and reports an empty driver list at first use.
+     */
+    @BuildStep(onlyIf = NativeBuild.class)
+    void registerConnectionFactoryProviders(JooqConfig jooqConfig,
+            BuildProducer<ServiceProviderBuildItem> serviceProvider) {
+        if (!hasReactiveContext(jooqConfig)) {
+            return;
+        }
+        serviceProvider
+                .produce(ServiceProviderBuildItem.allProvidersFromClassPath(ConnectionFactoryProvider.class.getName()));
     }
 
     @BuildStep(onlyIf = { NativeBuild.class, RegisterClassesForReflectionEnabled.class })
@@ -133,25 +152,31 @@ public class JooqProcessor {
         classCreator.addAnnotation(ApplicationScoped.class);
 
         JooqItemConfig defaultConfig = jooqConfig.defaultConfig();
+        requireSingleConnectionSource(DataSourceUtil.DEFAULT_DATASOURCE_NAME, defaultConfig);
         if (isPresentDialect(defaultConfig)) {
-            Optional<JdbcDataSourceBuildItem> defaultJdbcDataSourceBuildItem = jdbcDataSourcesBuildItem.stream()
-                    .filter(JdbcDataSourceBuildItem::isDefault)
-                    .findFirst();
+            Class<?> connectionSourceType = connectionSourceType(defaultConfig);
+            String dsVarName = isReactive(defaultConfig) ? "defaultConnectionFactory" : "defaultDataSource";
 
-            if (!defaultJdbcDataSourceBuildItem.isPresent()) { //dataSourceConfig.defaultDataSource.dbKind
-                log.warn("Default dataSource not found");
-                System.err.println(">>> Default dataSource not found");
-            }
-            if (defaultConfig.datasource().isPresent()
-                    && !DataSourceUtil.DEFAULT_DATASOURCE_NAME.equals(defaultConfig.datasource().get())) {
-                log.warn("Skip default dataSource name: " + defaultConfig.datasource().get());
-            }
-            String dsVarName = "defaultDataSource";
-
-            FieldCreator defaultDataSourceCreator = classCreator.getFieldCreator(dsVarName, AgroalDataSource.class)
+            FieldCreator defaultDataSourceCreator = classCreator.getFieldCreator(dsVarName, connectionSourceType)
                     .setModifiers(Opcodes.ACC_MODULE);
 
-            defaultDataSourceCreator.addAnnotation(Default.class);
+            if (isReactive(defaultConfig)) {
+                defaultDataSourceCreator.addAnnotation(namedAnnotation(defaultConfig.connectionFactory().get()));
+            } else {
+                Optional<JdbcDataSourceBuildItem> defaultJdbcDataSourceBuildItem = jdbcDataSourcesBuildItem.stream()
+                        .filter(JdbcDataSourceBuildItem::isDefault)
+                        .findFirst();
+
+                if (!defaultJdbcDataSourceBuildItem.isPresent()) { //dataSourceConfig.defaultDataSource.dbKind
+                    log.warn("Default dataSource not found");
+                    System.err.println(">>> Default dataSource not found");
+                }
+                if (defaultConfig.datasource().isPresent()
+                        && !DataSourceUtil.DEFAULT_DATASOURCE_NAME.equals(defaultConfig.datasource().get())) {
+                    log.warn("Skip default dataSource name: " + defaultConfig.datasource().get());
+                }
+                defaultDataSourceCreator.addAnnotation(Default.class);
+            }
             defaultDataSourceCreator.addAnnotation(Inject.class);
 
             //
@@ -166,19 +191,18 @@ public class JooqProcessor {
             ResultHandle dialectRH = defaultDslContextMethodCreator.load(dialect);
 
             ResultHandle dataSourceRH = defaultDslContextMethodCreator.readInstanceField(
-                    FieldDescriptor.of(classCreator.getClassName(), dsVarName, AgroalDataSource.class.getName()),
+                    FieldDescriptor.of(classCreator.getClassName(), dsVarName, connectionSourceType.getName()),
                     defaultDslContextMethodCreator.getThis());
 
             if (defaultConfig.configurationInject().isPresent()) {
                 String configurationInjectName = defaultConfig.configurationInject().get();
-                String injectVarName = "configuration_" + HashUtil.sha1(configurationInjectName);
+                String injectVarName = configurationInjectFieldName(DataSourceUtil.DEFAULT_DATASOURCE_NAME);
 
                 FieldCreator configurationCreator = classCreator.getFieldCreator(injectVarName, JooqCustomContext.class)
                         .setModifiers(Opcodes.ACC_MODULE);
 
                 configurationCreator.addAnnotation(Inject.class);
-                configurationCreator.addAnnotation(AnnotationInstance.create(DotNames.NAMED, null,
-                        new AnnotationValue[] { AnnotationValue.createStringValue("value", configurationInjectName) }));
+                configurationCreator.addAnnotation(namedAnnotation(configurationInjectName));
 
                 ResultHandle configurationRH = defaultDslContextMethodCreator.readInstanceField(
                         FieldDescriptor.of(classCreator.getClassName(), injectVarName, JooqCustomContext.class.getName()),
@@ -187,7 +211,7 @@ public class JooqProcessor {
                 defaultDslContextMethodCreator.returnValue( //
                         defaultDslContextMethodCreator.invokeVirtualMethod(
                                 MethodDescriptor.ofMethod(producerClass, "createDslContext",
-                                        DSLContext.class, String.class, AgroalDataSource.class,
+                                        DSLContext.class, String.class, connectionSourceType,
                                         JooqCustomContext.class),
                                 defaultDslContextMethodCreator.getThis(), dialectRH, dataSourceRH, configurationRH));
             } else {
@@ -200,7 +224,7 @@ public class JooqProcessor {
 
                 defaultDslContextMethodCreator.returnValue(defaultDslContextMethodCreator.invokeVirtualMethod(
                         MethodDescriptor.ofMethod(producerClass, "createDslContext", DSLContext.class,
-                                String.class, AgroalDataSource.class, String.class),
+                                String.class, connectionSourceType, String.class),
                         defaultDslContextMethodCreator.getThis(), dialectRH, dataSourceRH, configurationRH));
             }
         }
@@ -208,60 +232,65 @@ public class JooqProcessor {
         for (Entry<String, JooqItemConfig> configEntry : jooqConfig.namedConfig().entrySet()) {
             String named = configEntry.getKey();
             JooqItemConfig namedConfig = configEntry.getValue();
+            requireSingleConnectionSource(named, namedConfig);
             if (!isPresentDialect(namedConfig)) {
                 log.warnv("!isPresentDialect(namedConfig), named: {0}, namedConfig: {1}", named, namedConfig);
                 continue;
             }
-            if (!namedConfig.datasource().isPresent()) {
-                log.warnv("(!config.datasource.isPresent()), named: {0}, namedConfig: {1}", named, namedConfig);
+            if (!namedConfig.datasource().isPresent() && !namedConfig.connectionFactory().isPresent()) {
+                log.warnv("Neither datasource nor connection-factory is present, named: {0}, namedConfig: {1}", named,
+                        namedConfig);
                 continue;
             }
 
-            String dataSourceName = namedConfig.datasource().get();
-            Optional<JdbcDataSourceBuildItem> namedJdbcDataSourceBuildItem = jdbcDataSourcesBuildItem.stream()
-                    .filter(j -> j.getName().equals(dataSourceName))
-                    .findFirst();
+            Class<?> connectionSourceType = connectionSourceType(namedConfig);
+            String suffix = HashUtil.sha1(named);
+            String dsVarName = (isReactive(namedConfig) ? "connectionFactory_" : "dataSource_") + suffix;
 
-            if (!namedJdbcDataSourceBuildItem.isPresent()) {
-                log.warnv("Named: '{0}' dataSource not found", dataSourceName);
-                System.err.println(">>> Named: '" + dataSourceName + "' dataSource not found");
+            String connectionSourceName;
+            if (isReactive(namedConfig)) {
+                connectionSourceName = namedConfig.connectionFactory().get();
+            } else {
+                connectionSourceName = namedConfig.datasource().get();
+                Optional<JdbcDataSourceBuildItem> namedJdbcDataSourceBuildItem = jdbcDataSourcesBuildItem.stream()
+                        .filter(j -> j.getName().equals(connectionSourceName))
+                        .findFirst();
+
+                if (!namedJdbcDataSourceBuildItem.isPresent()) {
+                    log.warnv("Named: '{0}' dataSource not found", connectionSourceName);
+                    System.err.println(">>> Named: '" + connectionSourceName + "' dataSource not found");
+                }
             }
 
-            String suffix = HashUtil.sha1(named);
-            String dsVarName = "dataSource_" + suffix;
-
-            FieldCreator dataSourceCreator = classCreator.getFieldCreator(dsVarName, AgroalDataSource.class)
+            FieldCreator dataSourceCreator = classCreator.getFieldCreator(dsVarName, connectionSourceType)
                     .setModifiers(Opcodes.ACC_MODULE);
             dataSourceCreator.addAnnotation(Inject.class);
-            dataSourceCreator.addAnnotation(AnnotationInstance.create(DotNames.NAMED, null,
-                    new AnnotationValue[] { AnnotationValue.createStringValue("value", dataSourceName) }));
+            dataSourceCreator.addAnnotation(namedAnnotation(connectionSourceName));
 
             MethodCreator namedDslContextMethodCreator = classCreator.getMethodCreator("createNamedDslContext_" + suffix,
                     DSLContext.class.getName());
 
             namedDslContextMethodCreator.addAnnotation(ApplicationScoped.class);
             namedDslContextMethodCreator.addAnnotation(Produces.class);
-            namedDslContextMethodCreator.addAnnotation(AnnotationInstance.create(DotNames.NAMED, null,
-                    new AnnotationValue[] { AnnotationValue.createStringValue("value", named) }));
+            namedDslContextMethodCreator.addAnnotation(namedAnnotation(named));
             namedDslContextMethodCreator.addAnnotation(AnnotationInstance.create(DSL_CONTEXT_QUALIFIER, null,
                     new AnnotationValue[] { AnnotationValue.createStringValue("value", named) }));
 
             ResultHandle dialectRH = namedDslContextMethodCreator.load(namedConfig.dialect());
 
             ResultHandle dataSourceRH = namedDslContextMethodCreator.readInstanceField(
-                    FieldDescriptor.of(classCreator.getClassName(), dsVarName, AgroalDataSource.class.getName()),
+                    FieldDescriptor.of(classCreator.getClassName(), dsVarName, connectionSourceType.getName()),
                     namedDslContextMethodCreator.getThis());
 
             if (namedConfig.configurationInject().isPresent()) {
                 String configurationInjectName = namedConfig.configurationInject().get();
-                String injectVarName = "configurationInjectName" + HashUtil.sha1(configurationInjectName);
+                String injectVarName = configurationInjectFieldName(named);
 
                 FieldCreator configurationCreator = classCreator.getFieldCreator(injectVarName, JooqCustomContext.class)
                         .setModifiers(Opcodes.ACC_MODULE);
 
                 configurationCreator.addAnnotation(Inject.class);
-                configurationCreator.addAnnotation(AnnotationInstance.create(DotNames.NAMED, null,
-                        new AnnotationValue[] { AnnotationValue.createStringValue("value", configurationInjectName) }));
+                configurationCreator.addAnnotation(namedAnnotation(configurationInjectName));
 
                 ResultHandle configurationRH = namedDslContextMethodCreator.readInstanceField(FieldDescriptor
                         .of(classCreator.getClassName(), injectVarName, JooqCustomContext.class.getName()),
@@ -269,7 +298,7 @@ public class JooqProcessor {
 
                 namedDslContextMethodCreator.returnValue(namedDslContextMethodCreator.invokeVirtualMethod(
                         MethodDescriptor.ofMethod(producerClass, "createDslContext",
-                                DSLContext.class, String.class, AgroalDataSource.class, JooqCustomContext.class),
+                                DSLContext.class, String.class, connectionSourceType, JooqCustomContext.class),
                         namedDslContextMethodCreator.getThis(), dialectRH, dataSourceRH, configurationRH));
             } else {
                 ResultHandle configurationRH = namedConfig.configuration().isPresent()
@@ -281,7 +310,7 @@ public class JooqProcessor {
 
                 namedDslContextMethodCreator.returnValue(namedDslContextMethodCreator.invokeVirtualMethod(
                         MethodDescriptor.ofMethod(producerClass, "createDslContext", DSLContext.class,
-                                String.class, AgroalDataSource.class, String.class),
+                                String.class, connectionSourceType, String.class),
                         namedDslContextMethodCreator.getThis(), dialectRH, dataSourceRH, configurationRH));
             }
         }
@@ -291,6 +320,48 @@ public class JooqProcessor {
 
     protected boolean isPresentDialect(JooqItemConfig itemConfig) {
         return itemConfig.dialect() != null && !itemConfig.dialect().isEmpty();
+    }
+
+    /**
+     * A reactive context is driven by an R2DBC {@link ConnectionFactory} instead of a blocking JDBC dataSource.
+     */
+    private static boolean isReactive(JooqItemConfig itemConfig) {
+        return itemConfig.connectionFactory().isPresent();
+    }
+
+    static boolean hasReactiveContext(JooqConfig jooqConfig) {
+        return isReactive(jooqConfig.defaultConfig())
+                || jooqConfig.namedConfig().values().stream().anyMatch(JooqProcessor::isReactive);
+    }
+
+    /**
+     * Keyed on the context, not on the injected bean name: two contexts may share one {@link JooqCustomContext} bean,
+     * and a field name derived from that bean would have them collide on a single field, which Gizmo answers by
+     * re-annotating the existing one.
+     */
+    static String configurationInjectFieldName(String contextName) {
+        return "configurationInject_" + HashUtil.sha1(contextName);
+    }
+
+    private static Class<?> connectionSourceType(JooqItemConfig itemConfig) {
+        return isReactive(itemConfig) ? ConnectionFactory.class : AgroalDataSource.class;
+    }
+
+    /**
+     * Picking the wrong connection source silently would surface as a blocking query on an event loop, or as a
+     * transaction that never spans the pipeline it was meant to wrap, so this fails the build rather than warning.
+     */
+    static void requireSingleConnectionSource(String contextName, JooqItemConfig itemConfig) {
+        if (itemConfig.datasource().isPresent() && itemConfig.connectionFactory().isPresent()) {
+            throw new ConfigurationException(String.format(
+                    "jOOQ context '%s' sets both a datasource ('%s') and a connection-factory ('%s'). Set exactly one.",
+                    contextName, itemConfig.datasource().get(), itemConfig.connectionFactory().get()));
+        }
+    }
+
+    private static AnnotationInstance namedAnnotation(String value) {
+        return AnnotationInstance.create(DotNames.NAMED, null,
+                new AnnotationValue[] { AnnotationValue.createStringValue("value", value) });
     }
 
     static class RegisterClassesForReflectionEnabled implements BooleanSupplier {

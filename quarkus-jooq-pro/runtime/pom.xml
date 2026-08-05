@@ -43,6 +43,14 @@
             <artifactId>quarkus-jooq</artifactId>
             <version>${project.version}</version>
         </dependency>
+
+        <!-- The R2DBC SPI only, never a driver or a pool: an application opting into a reactive
+             context brings those itself. Declared because this module names ConnectionFactory
+             directly, though jOOQ already depends on it. -->
+        <dependency>
+            <groupId>io.r2dbc</groupId>
+            <artifactId>r2dbc-spi</artifactId>
+        </dependency>
     </dependencies>
 
 </project>
