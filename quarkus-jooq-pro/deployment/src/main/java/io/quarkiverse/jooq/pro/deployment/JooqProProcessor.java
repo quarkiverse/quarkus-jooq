@@ -39,8 +39,8 @@ class JooqProProcessor extends JooqProcessor {
             return;
         }
 
-        reflectiveClass.produce(new ReflectiveClassBuildItem(true, false, AbstractDslContextProducer.class));
-        reflectiveClass.produce(new ReflectiveClassBuildItem(false, true, LoggerListener.class));
+        reflectiveClass.produce(ReflectiveClassBuildItem.builder(AbstractDslContextProducer.class).methods().build());
+        reflectiveClass.produce(ReflectiveClassBuildItem.builder(LoggerListener.class).fields().build());
 
         if (!isPresentDialect(jooqConfig.defaultConfig())) {
             log.warn("No default sql-dialect been defined");
